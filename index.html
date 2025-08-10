@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; max-width: 1100px; margin: 2em auto; background-color: #f8f9fa; color: #333; }
+        h1, h2 { text-align: center; color: #0056b3; }
+        nav { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
+        nav button { font-size: 1rem; padding: 0.75em 1.5em; cursor: pointer; border: 1px solid #ccc; background-color: #fff; border-radius: 8px; }
+        nav button.active { background-color: #007bff; color: white; border-color: #007bff; }
+        form { background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 2em; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        /* Simple hide/show logic */
+        .section { display: none; }
+        .section.active { display: block; }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    
+    <nav>
+        <button id="nav-portfolio" class="active">Manage Portfolio</button>
+        <button id="nav-blog">Manage Blog</button>
+    </nav>
+
+    <main id="portfolio-section" class="section active">
+        <form id="portfolio-form">
+            <h2 id="portfolio-form-title">Add New Portfolio</h2>
+            <input type="hidden" id="portfolio-id">
+            <div class="form-group"><label for="p-title">Title:</label><input type="text" id="p-title" name="title" required></div>
+            <div class="form-group"><label for="p-description">Description:</label><textarea id="p-description" name="description"></textarea></div>
+            <div class="form-group"><label for="p-projectUrl">Project URL:</label><input type="url" id="p-projectUrl" name="projectUrl"></div>
+            <div class="form-group"><label for="p-githubUrl">GitHub URL:</label><input type="url" id="p-githubUrl" name="githubUrl"></div>
+            <div class="form-group"><label for="p-tags">Tags:</label><input type="text" id="p-tags" name="tags"></div>
+            <div class="form-group"><label for="p-image">Image:</label><input type="file" id="p-image" name="image"></div>
+            <button type="submit">Save Portfolio</button>
+        </form>
+        <h2>Existing Portfolios</h2>
+        <div id="portfolio-list">Loading...</div>
+    </main>
+    
+    <main id="blog-section" class="section">
+        <form id="blog-form">
+            <h2 id="blog-form-title">Create New Post</h2>
+            <input type="hidden" id="post-id">
+            <div class="form-group"><label for="b-title">Title:</label><input type="text" id="b-title" name="title" required></div>
+            <div class="form-group"><label for="b-content">Content:</label><textarea id="b-content" name="content" rows="10"></textarea></div>
+            <div class="form-group"><label for="b-excerpt">Excerpt:</label><textarea id="b-excerpt" name="excerpt" rows="3"></textarea></div>
+            <div class="form-group"><label for="b-status">Status:</label><select id="b-status" name="status"><option value="draft">Draft</option><option value="published">Published</option></select></div>
+            <div class="form-group"><label for="b-coverImage">Cover Image:</label><input type="file" id="b-coverImage" name="coverImage"></div>
+            <button type="submit">Save Post</button>
+        </form>
+        <h2>Existing Posts</h2>
+        <table>
+            <thead><tr><th>Title</th><th>Status</th><th>Created At</th><th>Actions</th></tr></thead>
+            <tbody id="posts-list"></tbody>
+        </table>
+    </main>
+
+<script>
+    // URL Endpoints
+    const PORTFOLIO_API_URL = '/api/portfolio';
+    const BLOG_API_URL = '/api/posts';
+
+    // Ambil semua elemen DOM yang dibutuhkan
+    const navPortfolio = document.getElementById('nav-portfolio');
+    const navBlog = document.getElementById('nav-blog');
+    const portfolioSection = document.getElementById('portfolio-section');
+    const blogSection = document.getElementById('blog-section');
+    
+    // --- LOGIKA NAVIGASI ---
+    function showPortfolio() {
+        portfolioSection.classList.add('active');
+        blogSection.classList.remove('active');
+        navPortfolio.classList.add('active');
+        navBlog.classList.remove('active');
+        // Panggil fungsi untuk fetch data portfolio
+        fetchAndRenderPortfolios();
+    }
+
+    function showBlog() {
+        blogSection.classList.add('active');
+        portfolioSection.classList.remove('active');
+        navBlog.classList.add('active');
+        navPortfolio.classList.remove('active');
+        // Panggil fungsi untuk fetch data blog
+        fetchAndRenderPosts();
+    }
+    
+    navPortfolio.addEventListener('click', showPortfolio);
+    navBlog.addEventListener('click', showBlog);
+    
+    // --- LOGIKA UNTUK PORTFOLIO (salin dari file sebelumnya) ---
+    const portfolioList = document.getElementById('portfolio-list');
+    const portfolioForm = document.getElementById('portfolio-form');
+    // (Tambahkan semua fungsi: fetchAndRenderPortfolios, event listener form portfolio, dll. di sini)
+    async function fetchAndRenderPortfolios() {
+        const response = await fetch(PORTFOLIO_API_URL);
+        const items = await response.json();
+        portfolioList.innerHTML = ''; // Hapus loading
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.innerHTML = `<p>${item.title} [<a href="#" onclick="deletePortfolio(${item.id})">Delete</a>]</p>`;
+            portfolioList.appendChild(div);
+        });
+    }
+    async function deletePortfolio(id) {
+        if (!confirm('Delete this portfolio?')) return;
+        await fetch(`${PORTFOLIO_API_URL}/${id}`, { method: 'DELETE' });
+        fetchAndRenderPortfolios();
+    }
+    portfolioForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(portfolioForm);
+        await fetch(PORTFOLIO_API_URL, { method: 'POST', body: formData });
+        portfolioForm.reset();
+        fetchAndRenderPortfolios();
+    });
+
+
+    // --- LOGIKA UNTUK BLOG (salin dari file sebelumnya) ---
+    const postsList = document.getElementById('posts-list');
+    const blogForm = document.getElementById('blog-form');
+    // (Tambahkan semua fungsi: fetchAndRenderPosts, event listener form blog, dll. di sini)
+    async function fetchAndRenderPosts() {
+        const response = await fetch(`${BLOG_API_URL}?status=all`);
+        const items = await response.json();
+        postsList.innerHTML = ''; // Hapus loading
+        items.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.title}</td>
+                <td>${item.status}</td>
+                <td>${new Date(item.createdAt).toLocaleDateString('id-ID')}</td>
+                <td><button onclick="deletePost(${item.id})">Delete</button></td>
+            `;
+            postsList.appendChild(row);
+        });
+    }
+    async function deletePost(id) {
+        if (!confirm('Delete this post?')) return;
+        await fetch(`${BLOG_API_URL}/${id}`, { method: 'DELETE' });
+        fetchAndRenderPosts();
+    }
+    blogForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(blogForm);
+        await fetch(BLOG_API_URL, { method: 'POST', body: formData });
+        blogForm.reset();
+        fetchAndRenderPosts();
+    });
+
+    // Inisialisasi: Tampilkan halaman portfolio saat pertama kali dimuat
+    document.addEventListener('DOMContentLoaded', showPortfolio);
+
+</script>
+</body>
+</html>
