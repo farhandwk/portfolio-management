@@ -233,6 +233,11 @@ app.delete('/api/posts/:id', async (req, res) => {
     }
 });
 
+app.use((req, res, next) => {
+    console.log(`DEBUG: Request masuk ke ${req.method} ${req.originalUrl}, tetapi tidak ada rute yang cocok.`);
+    res.status(404).send(`Cannot ${req.method} ${req.originalUrl}`);
+});
+
 app.listen(port, () => {
     console.log(`Server berjalan di port: ${port}`);
 });
