@@ -9,7 +9,7 @@ const upload = require('../uploads'); // Kita akan buat file upload terpisah
 router.get('/', async (req, res) => {
     try {
         // PERBAIKAN: Langsung gunakan db.execute
-        const [rows] = await (await db).execute('SELECT * FROM portfolio ORDER BY id DESC');
+        const [rows] = await db.execute('SELECT * FROM portfolio ORDER BY id DESC');
         res.json(rows);
     } catch (error) {
         console.error("Detail Error saat get:", error);
