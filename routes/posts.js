@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
             query = 'SELECT id, title, slug, status, createdAt FROM posts ORDER BY createdAt DESC';
         }
 
-        const [posts] = await (await db).execute(query);
+        const [posts] = await db.execute(query);
         res.json(posts);
     } catch (error) {
         console.error("Error fetching posts:", error);
@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
     try {
         const { slug } = req.params;
-        const [rows] = await (await db).execute('SELECT * FROM posts WHERE slug = ? AND status = "published"', [slug]);
+        const [rows] = await db.execute('SELECT * FROM posts WHERE slug = ? AND status = "published"', [slug]);
         if (rows.length === 0) {
             return res.status(404).json({ message: "Post not found" });
         }
@@ -49,7 +49,7 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
         const slug = createSlug(title);
         const coverImageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
-        const [result] = await (await db).execute(
+        const [result] = await db.execute(
             'INSERT INTO posts (title, slug, content, excerpt, coverImage, status) VALUES (?, ?, ?, ?, ?, ?)',
             [title, slug, content, excerpt, coverImageUrl, status || 'draft']
         );
@@ -79,7 +79,7 @@ router.put('/:id', upload.single('coverImage'), async (req, res) => {
 
         const slug = createSlug(title);
 
-        await (await db).execute(
+        await db.execute(
             'UPDATE posts SET title = ?, slug = ?, content = ?, excerpt = ?, coverImage = ?, status = ? WHERE id = ?',
             [title, slug, content, excerpt, coverImage, status, id]
         );
@@ -98,7 +98,7 @@ router.delete('/:id', async (req, res) => {
         const { id } = req.params;
         
         // (Opsional: hapus cover image dari folder /uploads)
-        await (await db).execute('DELETE FROM posts WHERE id = ?', [id]);
+        await db.execute('DELETE FROM posts WHERE id = ?', [id]);
         res.json({ message: "Post deleted successfully" });
     } catch (error) {
         console.error("Error deleting post:", error);
